@@ -32,7 +32,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         adapter.resetGame()
         val myLogic=logic
         if(myLogic!=null)
+        {
             adapter.loadLogic(myLogic)
+            logic=Logic(myLogic.width,myLogic.numBombs)
+        }
         recyclerView.adapter=adapter
     }
 
