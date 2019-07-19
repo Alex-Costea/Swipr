@@ -1,36 +1,47 @@
 package com.example.swipr
 
+import android.os.Parcel
+import android.os.Parcelable
 import kotlin.random.Random
 
-class Logic (width : Int,numBombs:Int) {
-    var positionsList: MutableList<Possibilities>
-    var textList:MutableList<String>
-    private var size : Int
-    private var GameEnded:Boolean
-    private var InitGuessed:Boolean
-    private var Bombs:MutableList<Int>
-    private var width:Int = width
-    private var numBombs:Int
+class Logic (
+    var width: Int,
+    var numBombs: Int,
+    private var gameEnded: Boolean = false,
+    private var size: Int = width * width,
+    var positionsList: MutableList<Possibilities> = mutableListOf(),
+    var textList: MutableList<String> = mutableListOf(),
+    private var bombs: MutableList<Int> = mutableListOf(),
+    private var initGuessed: Boolean = false,
+    private var invalidatedItems: MutableList<Int> = mutableListOf()
+) : Parcelable {
+
     private val mooreNeighborhood =
         mutableListOf(Pair(-1,-1),Pair(-1,0),Pair(-1,1),Pair(0,-1),Pair(0,1),Pair(1,-1),Pair(1,0),Pair(1,1))
-    private var invalidatedItems:MutableList<Int>
+
     var updateItems:MutableList<Int>
     get() {val y=invalidatedItems;invalidatedItems = mutableListOf(); return y;}
     set(value){invalidatedItems=value}
+
+    constructor(parcel: Parcel) : this(
+        parcel.readInt(),
+        parcel.readInt(),
+        parcel.readByte() != 0.toByte(),
+        parcel.readInt(),
+        parcel.createStringArray().map{Possibilities.valueOf(it)}.toMutableList(),
+        parcel.createStringArray().toMutableList(),
+        parcel.createIntArray().toMutableList(),
+        parcel.readByte() != 0.toByte(),
+        parcel.createIntArray().toMutableList()
+    )
+
     init {
-        GameEnded=false
-        size=width*width
-        positionsList= mutableListOf()
-        textList= mutableListOf()
-        this.numBombs=numBombs
-        for(i in 1..size)
-        {
-            positionsList.add(Possibilities.Unclicked)
-            textList.add("")
-        }
-        Bombs=mutableListOf()
-        InitGuessed=false
-        invalidatedItems= mutableListOf()
+        if(positionsList.isEmpty())
+            for(i in 1..size)
+            {
+                positionsList.add(Possibilities.Unclicked)
+                textList.add("")
+            }
     }
 
     /**
@@ -38,7 +49,7 @@ class Logic (width : Int,numBombs:Int) {
      */
     fun reset()
     {
-        GameEnded=false
+        gameEnded=false
         positionsList= mutableListOf()
         textList= mutableListOf()
         for(i in 1..size)
@@ -46,8 +57,8 @@ class Logic (width : Int,numBombs:Int) {
             positionsList.add(Possibilities.Unclicked)
             textList.add("")
         }
-        Bombs=mutableListOf()
-        InitGuessed=false
+        bombs=mutableListOf()
+        initGuessed=false
         invalidatedItems= mutableListOf()
     }
 
@@ -56,7 +67,7 @@ class Logic (width : Int,numBombs:Int) {
      */
     private fun initBombs(nrBombs:Int,initGuess:Int)
     {
-        Bombs=mutableListOf(initGuess)
+        bombs=mutableListOf(initGuess)
         val initGuessX=numberToPos(initGuess).first
         val initGuessY=numberToPos(initGuess).second
         var bombsCleared=1
@@ -67,7 +78,7 @@ class Logic (width : Int,numBombs:Int) {
             if(isValid(initGuessX+i,initGuessY+j))
             {
                 val currentBomb = posToNumber(initGuessX + i, initGuessY + j)
-                Bombs.add(currentBomb)
+                bombs.add(currentBomb)
                 bombsCleared++
             }
         }
@@ -75,17 +86,17 @@ class Logic (width : Int,numBombs:Int) {
         {
             val bombLocation=Random.nextInt(0,size-i-bombsCleared)
             var j=0
-            for(j2 in 0 until Bombs.size)
+            for(j2 in 0 until bombs.size)
             {
-                if(Bombs[j2]>bombLocation+j)
+                if(bombs[j2]>bombLocation+j)
                 {
                     break
                 }
                 j++
             }
-            Bombs.add(j,bombLocation+j)
+            bombs.add(j,bombLocation+j)
         }
-        Bombs.remove(initGuess)
+        bombs.remove(initGuess)
         for(x in mooreNeighborhood)
         {
             val i=x.first
@@ -93,7 +104,7 @@ class Logic (width : Int,numBombs:Int) {
             if(isValid(initGuessX+i,initGuessY+j))
             {
                 val currentBomb = posToNumber(initGuessX + i, initGuessY + j)
-                Bombs.remove(currentBomb)
+                bombs.remove(currentBomb)
             }
         }
     }
@@ -118,7 +129,7 @@ class Logic (width : Int,numBombs:Int) {
     /**
      * Returns true if the given position is a bomb, false otherwise
      */
-    private fun isBomb(x:Int,y:Int) =Bombs.find {it==posToNumber(x,y)} !=null
+    private fun isBomb(x:Int,y:Int) =bombs.find {it==posToNumber(x,y)} !=null
 
     /**
      * Transforms XY coordonates to the XY number on the grid
@@ -196,7 +207,7 @@ class Logic (width : Int,numBombs:Int) {
      */
     private fun checkGameFinished()
     {
-        if(!InitGuessed)
+        if(!initGuessed)
             return
         var j=0
         var checkedJ=0
@@ -210,12 +221,12 @@ class Logic (width : Int,numBombs:Int) {
                 checkedJ++
         }
 
-        if(checkedJ==Bombs.size)
+        if(checkedJ==bombs.size)
         {
             var correctlyChecked=true
             for(i in 0 until size)
             {
-                if(positionsList[i]==Possibilities.Checked && Bombs.find({it==i})==null)
+                if(positionsList[i]==Possibilities.Checked && bombs.find({it==i})==null)
                 {
                     correctlyChecked=false
                 }
@@ -229,10 +240,10 @@ class Logic (width : Int,numBombs:Int) {
                         clear(i)
                     }
                 }
-                GameEnded=true
+                gameEnded=true
             }
         }
-        if(j==Bombs.size)
+        if(j==bombs.size)
         {
             for(i in 0 until size)
             {
@@ -243,7 +254,7 @@ class Logic (width : Int,numBombs:Int) {
                     invalidatedItems.add(i)
                 }
             }
-            GameEnded=true
+            gameEnded=true
         }
     }
 
@@ -252,16 +263,16 @@ class Logic (width : Int,numBombs:Int) {
      */
     private fun click(number: Int)
     {
-        if(!InitGuessed)
+        if(!initGuessed)
         {
             initBombs(numBombs,number)
         }
-        if (Bombs.find({it==(number)})==null)
+        if (bombs.find {it==(number)} ==null)
         {
             clear(number)
             val pos=numberToPos(number)
 
-            if(!InitGuessed)
+            if(!initGuessed)
                 for (z in mooreNeighborhood)
                 {
                     val x=pos.first+z.first
@@ -270,7 +281,7 @@ class Logic (width : Int,numBombs:Int) {
                         clear(posToNumber(x,y))
                 }
 
-            InitGuessed=true
+            initGuessed=true
             checkGameFinished()
         }
         else
@@ -278,7 +289,7 @@ class Logic (width : Int,numBombs:Int) {
             positionsList[number]=Possibilities.Bombed
             textList[number]="\uD83D\uDCA3"
             invalidatedItems.add(number)
-            GameEnded=true
+            gameEnded=true
         }
     }
 
@@ -309,7 +320,7 @@ class Logic (width : Int,numBombs:Int) {
      */
     fun update(number: Int, longClick: Boolean)
     {
-        if(GameEnded)
+        if(gameEnded)
             return
         when(longClick){
             false -> when(positionsList[number])
@@ -323,6 +334,32 @@ class Logic (width : Int,numBombs:Int) {
                 Possibilities.Checked -> uncheck(number)
                 Possibilities.Empty,Possibilities.Bombed -> {}
             }
+        }
+    }
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeInt(width)
+        parcel.writeInt(numBombs)
+        parcel.writeByte(if (gameEnded) 1 else 0)
+        parcel.writeInt(size)
+        parcel.writeStringArray(positionsList.map{ it.toString()}.toTypedArray())
+        parcel.writeStringArray(textList.toTypedArray())
+        parcel.writeIntArray(bombs.toIntArray())
+        parcel.writeByte(if (initGuessed) 1 else 0)
+        parcel.writeIntArray(invalidatedItems.toIntArray())
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<Logic> {
+        override fun createFromParcel(parcel: Parcel): Logic {
+            return Logic(parcel)
+        }
+
+        override fun newArray(size: Int): Array<Logic?> {
+            return arrayOfNulls(size)
         }
     }
 }

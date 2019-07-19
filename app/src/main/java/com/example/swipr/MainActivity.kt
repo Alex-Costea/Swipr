@@ -2,6 +2,7 @@ package com.example.swipr
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Parcel
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
@@ -14,6 +15,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var fullWidth : Int=0
     private val defaultBombs=10
     private val defaultWidth=12
+    private var logic : Logic? = null
 
     /**
      * Redoes the Recycler View from scratch and resets the game.
@@ -28,6 +30,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         recyclerView.layoutParams.height=fullWidth/size*size
         adapter.recSize=fullWidth
         adapter.resetGame()
+        val myLogic=logic
+        if(myLogic!=null)
+            adapter.loadLogic(myLogic)
         recyclerView.adapter=adapter
     }
 
@@ -46,8 +51,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         if(fullWidth==0)
             fullWidth=recyclerView.width
         redoRecyclerView(width,bombsNr)
-        //redoRecyclerView(width,bombsNr)
-        //(v?.parent as View).invalidate()
+
     }
 
     /**
@@ -61,5 +65,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         supportActionBar?.hide()
         newGameButton.setOnClickListener(this)
         recyclerView.post { newGameButton.performClick() }
+        if(savedInstanceState!=null)
+        {
+            logic = savedInstanceState.getParcelable<Logic>("Logic")
+        }
+
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        outState?.putParcelable("Logic",(recyclerView.adapter as RecyclerAdapter).logic)
     }
 }

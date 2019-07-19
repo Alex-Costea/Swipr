@@ -9,13 +9,12 @@ enum class Possibilities
 {
     Unclicked, Empty, Bombed, Checked
 }
-class RecyclerAdapter(width: Int,numBombs: Int): RecyclerView.Adapter<RecyclerAdapter.ViewHolder>(){
+class RecyclerAdapter(width: Int,var numBombs: Int): RecyclerView.Adapter<RecyclerAdapter.ViewHolder>(){
     var logic: Logic = Logic(width,numBombs)
-    var width : Int
+    private var width : Int = width
     var recSize:Int=0
     init
     {
-        this.width=width
         setHasStableIds(true)
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerAdapter.ViewHolder {
@@ -36,6 +35,11 @@ class RecyclerAdapter(width: Int,numBombs: Int): RecyclerView.Adapter<RecyclerAd
 
     override fun getItemId(position: Int): Long {
         return position.hashCode().toLong()
+    }
+
+    fun loadLogic(logic:Logic)
+    {
+        this.logic=logic
     }
 
     fun resetGame()
