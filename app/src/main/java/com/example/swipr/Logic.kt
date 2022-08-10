@@ -110,12 +110,12 @@ class Logic (
     }
 
     /**
-     * Transforms a number to the XY coordonates on the grid
+     * Transforms a number to the XY coordinates on the grid
      */
     private fun numberToPos(number:Int) = Pair((number)/width+1,(number)%width+1)
 
     /**
-     * Returns true if the XY coordonates are valid on the grid, false otherwise
+     * Returns true if the XY coordinates are valid on the grid, false otherwise
      */
     private fun isValid(x:Int,y:Int) : Boolean
     {
@@ -132,7 +132,7 @@ class Logic (
     private fun isBomb(x:Int,y:Int) =bombs.find {it==posToNumber(x,y)} !=null
 
     /**
-     * Transforms XY coordonates to the XY number on the grid
+     * Transforms XY coordinates to the XY number on the grid
      */
     private fun posToNumber(x:Int,y:Int) =(x-1)*width+y-1
 
@@ -182,7 +182,7 @@ class Logic (
         //           bombCount++
         //}
 
-        var bombCount=countBombs(x,y)
+        val bombCount=countBombs(x,y)
         if(bombCount==0)
             textList[number]=""
         else textList[number]=bombCount.toString()
@@ -226,7 +226,7 @@ class Logic (
             var correctlyChecked=true
             for(i in 0 until size)
             {
-                if(positionsList[i]==Possibilities.Checked && bombs.find({it==i})==null)
+                if(positionsList[i]==Possibilities.Checked && bombs.find { it == i } ==null)
                 {
                     correctlyChecked=false
                 }

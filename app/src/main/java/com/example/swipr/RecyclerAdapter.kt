@@ -9,9 +9,8 @@ enum class Possibilities
 {
     Unclicked, Empty, Bombed, Checked
 }
-class RecyclerAdapter(width: Int,var numBombs: Int): RecyclerView.Adapter<RecyclerAdapter.ViewHolder>(){
+class RecyclerAdapter(private var width: Int, numBombs: Int): RecyclerView.Adapter<RecyclerAdapter.ViewHolder>(){
     var logic: Logic = Logic(width,numBombs)
-    private var width : Int = width
     var recSize:Int=0
     init
     {
@@ -60,13 +59,13 @@ class RecyclerAdapter(width: Int,var numBombs: Int): RecyclerView.Adapter<Recycl
     }
 
     inner class ViewHolder (view: View) : RecyclerView.ViewHolder(view), View.OnClickListener, View.OnLongClickListener {
-        var pos : Possibilities = Possibilities.Empty
+        private var pos : Possibilities = Possibilities.Empty
         var number:Int = 0
         private var myImageButton : ImageButton = view.findViewById(R.id.myImageButton)
-        var myTextView : TextView = view.findViewById(R.id.myTextView)
-        var view : View
+        private var myTextView : TextView = view.findViewById(R.id.myTextView)
+        private var view : View
 
-        var colors : List<Int> = listOf(R.color.ripple_material_light,
+        private var colors : List<Int> = listOf(R.color.ripple_material_light,
             R.color.material_grey_50,
             R.color.error_color_material_light,
             R.color.material_deep_teal_500

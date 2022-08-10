@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     /**
      * Redoes the Recycler View from scratch and resets the game.
-     * @param size The width and heigth of the grid
+     * @param size The width and height of the grid
      * @param bombsNr The number of bombs
      */
     private fun redoRecyclerView(size:Int, bombsNr:Int)
